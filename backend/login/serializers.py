@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from .models import Manager, Employee
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
+from .models import Seat, TimeSlot, Reservation
 
 
 class ManagerRegistrationSerializer(serializers.ModelSerializer):
@@ -73,3 +74,40 @@ class LoginSerializer(serializers.Serializer):
             'user_id': user.id,
             'user_type': user_type
         }
+        
+
+class SeatSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Seat
+        fields = ['id', 'seat_number', 'is_available']
+        
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['seat_id'] = representation.pop('id')
+        return representation
+
+class TimeSlotSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TimeSlot
+        fields = ['id', 'start_time', 'end_time']
+        
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['slot_id'] = representation.pop('id')
+        return representation
+
+class ReservationSerializer(serializers.ModelSerializer):
+    seat = serializers.PrimaryKeyRelatedField(queryset=Seat.objects.all())
+    time_slot = serializers.PrimaryKeyRelatedField(queryset=TimeSlot.objects.all())
+    employee = serializers.PrimaryKeyRelatedField(queryset=Employee.objects.all())
+
+    class Meta:
+        model = Reservation
+        fields = ['id', 'employee', 'seat', 'time_slot', 'reserved_at']
+    
+    def create(self, validated_data): 
+        employee = validated_data['employee']
+        manager = employee.manager
+        validated_data['manager'] = manager
+        return super().create(validated_data)
+    
