@@ -101,8 +101,11 @@ class MakeReservation(APIView):
             if seat.is_available:  
                 seat.is_available = False
                 seat.save()
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
+                try:
+                    serializer.save()
+                    return Response(serializer.data, status=status.HTTP_201_CREATED)
+                except serializer.ValidationError as e:
+                    return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
             else:
                 return Response({"error": "Seat is not available."}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

@@ -104,10 +104,19 @@ class ReservationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Reservation
         fields = ['id', 'employee', 'seat', 'time_slot', 'reserved_at']
-    
-    def create(self, validated_data): 
+
+    def create(self, validated_data):
         employee = validated_data['employee']
-        manager = employee.manager
+        manager = employee.manager  
+        
+        if manager.balance < 10:
+            raise serializers.ValidationError("Manager does not have enough balance for reservation.")
+
+        manager.balance -= 10
+        manager.save()
+
         validated_data['manager'] = manager
+
         return super().create(validated_data)
+
     
