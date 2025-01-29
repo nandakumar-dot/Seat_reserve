@@ -8,8 +8,9 @@ from .serializers import (
 )
 from .models import Manager, Employee
 from rest_framework.authentication import TokenAuthentication
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated,AllowAny
 from .models import Seat, TimeSlot, Reservation
+from rest_framework.authtoken.models import Token
 from .serializers import SeatSerializer, TimeSlotSerializer, ReservationSerializer, SeatAvailability, EmployeeSerializer, ManagerSerializer
 
 
@@ -140,20 +141,20 @@ class SeatAvailabilityView(APIView):
         seats = Seat.objects.all()
         seat_availability_data = []
 
-        # Check seat availability for each seat
+        
         for seat in seats:
-            # Try to get the seat availability for the current time slot
+            
             seat_availability = SeatAvailability.objects.filter(seat=seat, time_slot=time_slot).first()
 
             if seat_availability:
-                # If a seat availability record exists, use that
+                
                 seat_availability_data.append({
                     'seat': seat.id,
                     'seat_number': seat.seat_number,
                     'is_available': seat_availability.is_available
                 })
             else:
-                # If no seat availability record exists, assume the seat is available by default
+                
                 seat_availability_data.append({
                     'seat': seat.id,
                     'seat_number': seat.seat_number,
@@ -168,15 +169,15 @@ class ManagerBookings(APIView):
 
     def get(self, request, manager_id):
         try:
-            # Fetch the manager using the provided manager_id
+            
             manager = Manager.objects.get(id=manager_id)
         except Manager.DoesNotExist:
             return Response({"error": "Manager not found."}, status=status.HTTP_404_NOT_FOUND)
 
-        # Get all reservations for employees under this manager
+        
         reservations = Reservation.objects.filter(manager=manager)
 
-        # Serialize the reservations
+        
         serializer = ReservationSerializer(reservations, many=True)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -187,15 +188,15 @@ class EmployeeBookings(APIView):
 
     def get(self, request, employee_id):
         try:
-            # Fetch the employee using the provided employee_id
+            
             employee = Employee.objects.get(id=employee_id)
         except Employee.DoesNotExist:
             return Response({"error": "Employee not found."}, status=status.HTTP_404_NOT_FOUND)
 
-        # Get all reservations for this employee
+        
         reservations = Reservation.objects.filter(employee=employee)
 
-        # Serialize the reservations
+        
         serializer = ReservationSerializer(reservations, many=True)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -205,12 +206,12 @@ class ManagerInfo(APIView):
 
     def get(self, request, manager_id):
         try:
-            # Fetch the manager using the provided manager_id
+            
             manager = Manager.objects.get(id=manager_id)
         except Manager.DoesNotExist:
             return Response({"error": "Manager not found."}, status=status.HTTP_404_NOT_FOUND)
 
-        # Serialize the manager data
+        
         serializer = ManagerSerializer(manager)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -220,12 +221,28 @@ class EmployeeInfo(APIView):
 
     def get(self, request, employee_id):
         try:
-            # Fetch the employee using the provided employee_id
+            
             employee = Employee.objects.get(id=employee_id)
         except Employee.DoesNotExist:
             return Response({"error": "Employee not found."}, status=status.HTTP_404_NOT_FOUND)
 
-        # Serialize the employee data
+        
         serializer = EmployeeSerializer(employee)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+class ValidateToken(APIView):
+    authentication_classes = [TokenAuthentication]  
+    permission_classes = [AllowAny]  
+
+    def post(self, request):
+        token = request.headers.get('Authorization')  
+        if not token:
+            return Response({"error": "Token is missing"}, status=status.HTTP_400_BAD_REQUEST)
+
+        token_key = token.split("Token ")[-1]  
+        try:
+            token_obj = Token.objects.get(key=token_key)  
+            return Response({"message": "Token is valid", "user_id": token_obj.user.id}, status=status.HTTP_200_OK)
+        except Token.DoesNotExist:
+            return Response({"error": "Invalid token"}, status=status.HTTP_401_UNAUTHORIZED)

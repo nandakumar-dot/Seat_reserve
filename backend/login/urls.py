@@ -1,6 +1,6 @@
 from django.urls import path
 from .views import RegisterManager, RegisterEmployee, Login, ManagerList, EmployeeList, ManagerBalanceView
-from .views import SeatListView, TimeSlotListView, MakeReservation, SeatAvailabilityView, ManagerBookings, EmployeeBookings, ManagerInfo, EmployeeInfo
+from .views import SeatListView, TimeSlotListView, MakeReservation, SeatAvailabilityView, ManagerBookings, EmployeeBookings, ManagerInfo, EmployeeInfo, ValidateToken
 
 urlpatterns = [
     path('register/manager/', RegisterManager.as_view(), name='register_manager'),
@@ -17,4 +17,5 @@ urlpatterns = [
     path('employee/<int:employee_id>/bookings/', EmployeeBookings.as_view(), name='employee-bookings'),
     path('manager/<int:manager_id>/info/', ManagerInfo.as_view(), name='manager-info'),
     path('employee/<int:employee_id>/info/', EmployeeInfo.as_view(), name='employee-info'),
+    path('auth/validate-token/', ValidateToken.as_view(), name='validate-token')
 ]

@@ -132,22 +132,22 @@ class ReservationSerializer(serializers.ModelSerializer):
         seat = validated_data['seat']
         time_slot = validated_data['time_slot']
 
-        # Check if the seat is available for the given time slot
+        
         if not Reservation.is_seat_available(seat, time_slot):
             raise serializers.ValidationError("Seat is not available for this time slot.")
 
-        # Check if the manager has enough balance
+        
         if manager.balance < 10:
             raise serializers.ValidationError("Manager does not have enough balance for reservation.")
 
-        # Deduct balance from the manager
+        
         manager.balance -= 10
         manager.save()
 
-        # Proceed to create the reservation
+        
         validated_data['manager'] = manager
 
-        # Update SeatAvailability to mark seat as unavailable
+        
         seat_availability, created = SeatAvailability.objects.get_or_create(seat=seat, time_slot=time_slot)
         seat_availability.is_available = False
         seat_availability.save()
