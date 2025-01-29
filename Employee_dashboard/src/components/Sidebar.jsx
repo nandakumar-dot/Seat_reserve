@@ -17,7 +17,7 @@ const Sidebar = () => {
 
   return (
     <div className="sidebar">
-      {/* Section 1: Date Picker */}
+      {/* Section 1: Employee Name & Date Picker */}
       <div className="sidebar-section">
       <div class="profile-div">
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
