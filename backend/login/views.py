@@ -7,6 +7,8 @@ from .serializers import (
     LoginSerializer
 )
 from .models import Manager, Employee
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
 
 
 class RegisterManager(APIView):
@@ -36,6 +38,10 @@ class Login(APIView):
 
 
 class ManagerList(APIView):
+    
+    authentication_classes = [TokenAuthentication]  
+    permission_classes = [IsAuthenticated]  
+    
     def get(self, request):
         managers = Manager.objects.all()
         data = [{'user_id': manager.user.id, 'username': manager.user.username, 'email': manager.user.email, 'balance': manager.balance} for manager in managers]
@@ -43,12 +49,19 @@ class ManagerList(APIView):
 
 
 class EmployeeList(APIView):
+    
+    authentication_classes = [TokenAuthentication]  
+    permission_classes = [IsAuthenticated]  
+    
     def get(self, request):
         employees = Employee.objects.all()
         data = [{'user_id': employee.user.id, 'username': employee.user.username, 'email': employee.user.email, 'manager': employee.manager.user.username} for employee in employees]
         return Response(data, status=status.HTTP_200_OK)
 
 class ManagerBalanceView(APIView):
+    
+    authentication_classes = [TokenAuthentication]  
+    permission_classes = [IsAuthenticated]  
     def get(self, request, manager_id):
         try:
             manager = Manager.objects.get(user_id=manager_id)
