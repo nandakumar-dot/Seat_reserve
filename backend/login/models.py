@@ -19,7 +19,6 @@ class Employee(models.Model):
 
 class Seat(models.Model):
     seat_number = models.CharField(max_length=20, unique=True)  # e.g., A1, B2
-    is_available = models.BooleanField(default=True)
 
     def __str__(self):
         return self.seat_number
@@ -40,3 +39,18 @@ class Reservation(models.Model):
 
     def __str__(self):
         return f"{self.employee.user.username} -> {self.seat.seat_number} @ {self.time_slot}"
+    
+    @classmethod
+    def is_seat_available(cls, seat, time_slot):
+        return not cls.objects.filter(seat=seat, time_slot=time_slot).exists()
+
+class SeatAvailability(models.Model):
+    seat = models.ForeignKey(Seat, on_delete=models.CASCADE)
+    time_slot = models.ForeignKey(TimeSlot, on_delete=models.CASCADE)
+    is_available = models.BooleanField(default=True)
+
+    class Meta:
+        unique_together = ('seat', 'time_slot')
+
+    def __str__(self):
+        return f"{self.seat.seat_number} - {self.time_slot.start_time.strftime('%H:%M')} to {self.time_slot.end_time.strftime('%H:%M')}"

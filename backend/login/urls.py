@@ -1,6 +1,6 @@
 from django.urls import path
 from .views import RegisterManager, RegisterEmployee, Login, ManagerList, EmployeeList, ManagerBalanceView
-from .views import SeatListView, TimeSlotListView, MakeReservation
+from .views import SeatListView, TimeSlotListView, MakeReservation, SeatAvailabilityView
 
 urlpatterns = [
     path('register/manager/', RegisterManager.as_view(), name='register_manager'),
@@ -12,4 +12,5 @@ urlpatterns = [
     path('seats/', SeatListView.as_view(), name='seat-list'),
     path('timeslots/', TimeSlotListView.as_view(), name='timeslot-list'),
     path('make-reservation/', MakeReservation.as_view(), name='make-reservation'),
+    path('seats/status/<int:time_slot_id>/', SeatAvailabilityView.as_view(), name='seat_availability'),
 ]

@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from .models import Manager, Employee
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
-from .models import Seat, TimeSlot, Reservation
+from .models import Seat, TimeSlot, Reservation, SeatAvailability
 
 
 
@@ -94,7 +94,7 @@ class LoginSerializer(serializers.Serializer):
 class SeatSerializer(serializers.ModelSerializer):
     class Meta:
         model = Seat
-        fields = ['id', 'seat_number', 'is_available']
+        fields = ['id', 'seat_number']
         
     def to_representation(self, instance):
         representation = super().to_representation(instance)
@@ -111,10 +111,13 @@ class TimeSlotSerializer(serializers.ModelSerializer):
         representation['slot_id'] = representation.pop('id')
         return representation
 
+from rest_framework import serializers
+from .models import Reservation, Seat, TimeSlot, Employee, Manager
+
 class ReservationSerializer(serializers.ModelSerializer):
     seat_name = serializers.CharField(source='seat.seat_number', read_only=True)
-    time_slot_display = serializers.SerializerMethodField()
     employee_name = serializers.CharField(source='employee.user.username', read_only=True)
+    time_slot_display = serializers.SerializerMethodField()
 
     class Meta:
         model = Reservation
@@ -126,14 +129,28 @@ class ReservationSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         employee = validated_data['employee']
         manager = employee.manager  
-        
+        seat = validated_data['seat']
+        time_slot = validated_data['time_slot']
+
+        # Check if the seat is available for the given time slot
+        if not Reservation.is_seat_available(seat, time_slot):
+            raise serializers.ValidationError("Seat is not available for this time slot.")
+
+        # Check if the manager has enough balance
         if manager.balance < 10:
             raise serializers.ValidationError("Manager does not have enough balance for reservation.")
 
+        # Deduct balance from the manager
         manager.balance -= 10
         manager.save()
 
+        # Proceed to create the reservation
         validated_data['manager'] = manager
+
+        # Update SeatAvailability to mark seat as unavailable
+        seat_availability, created = SeatAvailability.objects.get_or_create(seat=seat, time_slot=time_slot)
+        seat_availability.is_available = False
+        seat_availability.save()
 
         return super().create(validated_data)
     
@@ -142,4 +159,9 @@ class ReservationSerializer(serializers.ModelSerializer):
         representation['reservation_id'] = representation.pop('id')
         representation['employee_id'] = representation.pop('employee')
         return representation
+
+class SeatAvailabilitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SeatAvailability
+        fields = ['seat', 'is_available']
     

@@ -10,7 +10,7 @@ from .models import Manager, Employee
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from .models import Seat, TimeSlot, Reservation
-from .serializers import SeatSerializer, TimeSlotSerializer, ReservationSerializer
+from .serializers import SeatSerializer, TimeSlotSerializer, ReservationSerializer, SeatAvailability, SeatAvailabilitySerializer
 
 
 class RegisterManager(APIView):
@@ -96,16 +96,68 @@ class MakeReservation(APIView):
 
     def post(self, request):
         serializer = ReservationSerializer(data=request.data)
+        
         if serializer.is_valid():
             seat = serializer.validated_data['seat']
-            if seat.is_available:  
-                seat.is_available = False
-                seat.save()
-                try:
-                    serializer.save()
-                    return Response(serializer.data, status=status.HTTP_201_CREATED)
-                except serializer.ValidationError as e:
-                    return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-            else:
-                return Response({"error": "Seat is not available."}, status=status.HTTP_400_BAD_REQUEST)
+            time_slot = serializer.validated_data['time_slot']
+            employee = serializer.validated_data['employee']
+            manager = employee.manager  
+
+            if not Reservation.is_seat_available(seat, time_slot):
+                return Response({"error": "Seat is not available for this time slot."}, status=status.HTTP_400_BAD_REQUEST)
+
+            
+            if manager.balance < 10:
+                return Response({"error": "Manager does not have enough balance for reservation."}, status=status.HTTP_400_BAD_REQUEST)
+
+            
+            manager.balance -= 10
+            manager.save()
+
+            
+            try:
+                serializer.save(manager=manager)
+                
+                
+                seat_availability, created = SeatAvailability.objects.get_or_create(seat=seat, time_slot=time_slot)
+                seat_availability.is_available = False
+                seat_availability.save()
+
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            except serializer.ValidationError as e:
+                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class SeatAvailabilityView(APIView):
+    def get(self, request, time_slot_id):
+        try:
+            time_slot = TimeSlot.objects.get(id=time_slot_id)
+        except TimeSlot.DoesNotExist:
+            return Response({"detail": "Time slot not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Get all seats
+        seats = Seat.objects.all()
+        seat_availability_data = []
+
+        # Check seat availability for each seat
+        for seat in seats:
+            # Try to get the seat availability for the current time slot
+            seat_availability = SeatAvailability.objects.filter(seat=seat, time_slot=time_slot).first()
+
+            if seat_availability:
+                # If a seat availability record exists, use that
+                seat_availability_data.append({
+                    'seat': seat.id,
+                    'seat_number': seat.seat_number,
+                    'is_available': seat_availability.is_available
+                })
+            else:
+                # If no seat availability record exists, assume the seat is available by default
+                seat_availability_data.append({
+                    'seat': seat.id,
+                    'seat_number': seat.seat_number,
+                    'is_available': True
+                })
+
+        return Response(seat_availability_data, status=status.HTTP_200_OK)
