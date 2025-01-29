@@ -1,0 +1,72 @@
+/* Sidebar Container */
+.sidebar {
+    width: 300px;
+    height: 100vh;
+    background-color: #f4f4f4;
+    padding: 20px;
+    border-right: 2px solid #ccc;
+    display: flex;
+    flex-direction: column;
+    /* justify-content: space-between; */
+  }
+  
+  /* Sidebar Section */
+  .sidebar-section {
+    margin-bottom: 20px;
+  }
+  
+  h3 {
+    font-size: 18px;
+    margin-bottom: 10px;
+  }
+  
+.wallet {
+    display: flex;
+}
+
+.size-6 {
+    width: 60px;
+    height: 60px;
+}
+
+.profile-div {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    /* border: solid; */
+}
+
+
+  /* Input Fields */
+  .date-picker {
+    width: 130px;
+    padding: 8px;
+    margin-bottom: 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+  
+  /* Employee Table */
+  .employee-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: white;
+  }
+  
+  .employee-table th,
+  .employee-table td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: center;
+  }
+  
+  .employee-table th {
+    background-color: #ddd;
+  }
+  
+  .no-data {
+    text-align: center;
+    padding: 10px;
+    color: gray;
+  }
