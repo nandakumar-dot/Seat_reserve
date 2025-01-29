@@ -165,3 +165,18 @@ class SeatAvailabilitySerializer(serializers.ModelSerializer):
         model = SeatAvailability
         fields = ['seat', 'is_available']
     
+class ManagerSerializer(serializers.ModelSerializer):
+    user_name = serializers.CharField(source='user.username')
+    employee_count = serializers.IntegerField(source='employees.count', read_only=True)
+
+    class Meta:
+        model = Manager
+        fields = ['id', 'user_name', 'balance', 'employee_count']
+        
+class EmployeeSerializer(serializers.ModelSerializer):
+    user_name = serializers.CharField(source='user.username')
+    manager_name = serializers.CharField(source='manager.user.username', read_only=True)
+
+    class Meta:
+        model = Employee
+        fields = ['id', 'user_name', 'manager_name']

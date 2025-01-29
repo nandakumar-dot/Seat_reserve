@@ -10,7 +10,7 @@ from .models import Manager, Employee
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from .models import Seat, TimeSlot, Reservation
-from .serializers import SeatSerializer, TimeSlotSerializer, ReservationSerializer, SeatAvailability, SeatAvailabilitySerializer
+from .serializers import SeatSerializer, TimeSlotSerializer, ReservationSerializer, SeatAvailability, EmployeeSerializer, ManagerSerializer
 
 
 class RegisterManager(APIView):
@@ -161,3 +161,71 @@ class SeatAvailabilityView(APIView):
                 })
 
         return Response(seat_availability_data, status=status.HTTP_200_OK)
+    
+
+class ManagerBookings(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, manager_id):
+        try:
+            # Fetch the manager using the provided manager_id
+            manager = Manager.objects.get(id=manager_id)
+        except Manager.DoesNotExist:
+            return Response({"error": "Manager not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Get all reservations for employees under this manager
+        reservations = Reservation.objects.filter(manager=manager)
+
+        # Serialize the reservations
+        serializer = ReservationSerializer(reservations, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class EmployeeBookings(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, employee_id):
+        try:
+            # Fetch the employee using the provided employee_id
+            employee = Employee.objects.get(id=employee_id)
+        except Employee.DoesNotExist:
+            return Response({"error": "Employee not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Get all reservations for this employee
+        reservations = Reservation.objects.filter(employee=employee)
+
+        # Serialize the reservations
+        serializer = ReservationSerializer(reservations, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+class ManagerInfo(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, manager_id):
+        try:
+            # Fetch the manager using the provided manager_id
+            manager = Manager.objects.get(id=manager_id)
+        except Manager.DoesNotExist:
+            return Response({"error": "Manager not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Serialize the manager data
+        serializer = ManagerSerializer(manager)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+class EmployeeInfo(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, employee_id):
+        try:
+            # Fetch the employee using the provided employee_id
+            employee = Employee.objects.get(id=employee_id)
+        except Employee.DoesNotExist:
+            return Response({"error": "Employee not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Serialize the employee data
+        serializer = EmployeeSerializer(employee)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
