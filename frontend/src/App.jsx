@@ -8,14 +8,15 @@ function App() {
     <div>
       {/* Welcome message */}
       <div style={{ textAlign: 'center', marginTop: '20px' }}>
-        <h1>Welcome to the Coffee Seat Reservation App</h1>
+        <h1>Blue-Reserve</h1>
       </div>
 
       {/* Routing logic */}
       <BrowserRouter>
         <Routes>
+        <Route path="/" element={<Login />} />
           {/* Route for Login */}
-          <Route path="/" element={<Login />} />
+          <Route path="/login" element={<Login />} />
           {/* Route for Register */}
           <Route path="/register" element={<Register />} />
         </Routes>

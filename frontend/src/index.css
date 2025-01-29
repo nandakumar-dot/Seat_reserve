@@ -8,7 +8,7 @@
 
 .card {
   background: white;
-  padding: 60px;
+  padding: 40px;
   border-radius: 10px;
   box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
   width: 350px;
@@ -35,11 +35,19 @@
   color: white;
 }
 
-/* Added spacing between fields */
+/* Added spacing between fields and aligned labels to the left */
 form {
   display: flex;
   flex-direction: column;
   gap: 15px;
+  text-align: left;
+}
+
+label {
+  font-weight: bold;
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 5px;
 }
 
 input, select {
@@ -57,6 +65,4 @@ input, select {
   background-color: #6200ea;
   color: white;
   cursor: pointer;
-  
-
 }
